@@ -1,0 +1,322 @@
+
+
+1#
+Splitting line into words.
+
+http://stackoverflow.com/questions/19812381/how-to-extract-words-out-of-a-string-and-store-them-in-different-array-in-c
+
+Things like splitting strings and finding the greatest element can be done
+using a few lines of code if you use the functions in the standard library, e.g: 
+
+// The text
+std::string text = "foo bar foobar";
+
+// Wrap text in stream.
+std::istringstream iss{text};
+
+// Read tokens from stream into vector (split at whitespace).
+std::vector<std::string> words{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
+
+// Get the greatest word.
+auto greatestWord = *std::max_element(std::begin(words), std::end(words), [] (const std::string& lhs, const std::string& rhs) { return lhs.size() < rhs.size(); });
+
+
+If you really want to dig down in the nitty-gritty parts using only functions
+from std::string, here's how you can do to split the text into words (I leave
+finding the greatest word to you, which shouldn't be too hard):
+
+// Use vector to store words.
+std::vector<std::string> words;
+std::string text = "foo bar foobar";
+
+std::string::size_type beg = 0, end;
+do {
+    end = text.find(' ', beg);
+    if (end == std::string::npos) {
+        end = text.size();
+    }
+    words.emplace_back(text.substr(beg, end - beg));
+    beg = end + 1;
+} while (beg < text.size());
+
+
+
+#include <iostream>
+#include <sstream>
+using namespace std;
+
+int main()
+{
+    string t;
+    getline(cin,t);
+
+    istringstream iss(t);
+    string word;
+    while(iss >> word) {
+        /* do stuff with word */
+    }
+}
+
+
+http://www.cplusplus.com/forum/beginner/121657/
+
+
+Another way to read word by word from the file, separated with space:
+---------------------------------------------------------------------
+However it not read line by line, but word by word only !
+"If you use getline with ' ' as the delimiter, it will not skip multiple spaces
+ and it will keep other forms of whitespace that >> would normally skip." 
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <conio.h>
+using namespace std;
+
+int main()
+{
+    string testline;
+    string word[16];
+
+    ifstream Test ( "Data.txt" );
+
+    if (!Test)
+    {
+        cout << "There was a problem opening the file. Press any key to close.\n";
+        getch();
+        return 0;
+    }
+
+    int i=0;
+    //store words in array while outputting, skipping blank lines
+    while( Test.good() )
+    {
+    	// getline ( Test, testline ); // It will read the line of the text file.
+        getline ( Test, testline, ' ');
+        if (testline!="")
+        {
+            word[i]=testline;
+            cout << word[i] << endl;
+            i++;
+        }
+    }
+
+    //output whole array with spaces between each word
+    cout<<"\nArray contents:\n";
+    for (int k=0;k<i;k++)
+        cout<<word[k]<<" ";
+    return 0;
+}
+
+
+
+why not just use:
+ifstream file("the_file.whatever");
+while(file >> some_string)
+    some_vector_of_type_string.push_back(some_string);
+  
+? it grabs whitespace seperated words 
+
+-------------------------------------------
+
+http://stackoverflow.com/questions/236129/split-a-string-in-c
+http://www.cplusplus.com/forum/general/78163/
+
+
+The example shows you how to split a string into multiple words delimited
+by spaces or end of line (main.cpp).
+
+#include <iostream>
+#include <string>
+#include <sstream>
+ 
+using namespace std;
+ 
+int main(int argc, const char * argv[]) {
+ 
+    string str1("the brown fox jumped over the lazy dog");
+    istringstream iss(str1);
+ 
+    while (iss) {     //arek: seems to be you have to use "iss >> word" as an condition. 
+        string word;
+        iss >> word;
+        cout << word << endl;
+    }
+    return 0;
+}
+ 
+
+
+
+
+
+
+2#
+Example of read word by word separated by whitespaces from the file:
+http://www.cplusplus.com/forum/beginner/121657/
+
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <conio.h>
+#include <vector>
+using namespace std;
+
+int main()
+{
+    string testline;
+    vector<string> word;
+
+    ifstream Test ( "Data.txt" );
+
+    if (!Test)
+    {
+        cout << "There was a problem opening the file. Press any key to close.\n";
+        getch();
+        return 0;
+    }
+
+    //store words in array while outputting
+    while(Test >> testline)
+    {
+        cout << testline << endl;
+        word.push_back(testline);
+    }
+    //output whole array with array position numbers for each entry
+    cout<<"\nArray contents:\n";
+        for (int i=0;i<word.size();i++)
+        cout<<word[i]<<"("<<i<<")"<<endl;
+
+    return 0;
+}
+
+
+Note:
+
+Why is it storing the last value twice? 
+Because your loop condition is incorrect:
+
+     //store words in array while outputting
+    while( Test )
+    {
+            Test>>testline;
+            cout<<testline<<endl;
+            word.push_back(testline);
+    }
+  
+When you read the last bytes of a file, it does not set any eof or bad flags,
+so the stream is still in good state, meaning you run the loop an extra time.
+On this extra time, the input operation fails, leaving 'testline' unchanged,
+and then since you don't care that it failed, you push it onto the vector again.
+Always perform input in the loop condition:
+
+ while(Test >> testline)
+ {
+    cout << testline << endl;
+    word.push_back(testline);
+ }
+
+CplusplusAcolyte wrote:
+
+EDIT: Problem solved. I changed the condition of the while loop on line 26
+to !Test.eof() and this prevented the last entry being stored twice. 
+No, it didn't, you just got lucky. Never loop on eof. 
+
+So, this is final:
+
+Example of read word by word separated by whitespaces from the file:
+http://www.cplusplus.com/forum/beginner/121657/
+
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+using namespace std;
+
+int main()
+{
+    string testline;
+    vector<string> word;
+
+    ifstream Test ( "Data.txt" );
+
+    if (!Test)
+    {
+        cout << "There was an error opening the file.\n";
+        return 0;
+    }
+
+    //store words in vector
+    while( Test>>testline )
+            word.push_back(testline);
+
+    //output whole vector with position numbers for each entry
+    cout<<"Array contents:\n";
+        for (int i=0;i<word.size();i++)     //arek: For good practice, in place of size
+                                            //      it should be iterator.
+        cout<<word[i]<<"("<<i<<")"<<endl;
+
+    return 0;
+}
+
+
+3#
+Find a string.
+
+http://www.cplusplus.com/reference/unordered_set/unordered_set/find/
+
+// unordered_set::find
+#include <iostream>
+#include <string>
+#include <unordered_set>
+
+int main ()
+{
+  std::unordered_set<std::string> myset = { "red","green","blue" };
+
+  std::string input;
+  std::cout << "color? ";
+  getline (std::cin,input);
+
+  std::unordered_set<std::string>::const_iterator got = myset.find (input);
+
+  if ( got == myset.end() )
+    std::cout << "not found in myset";
+  else
+    std::cout << *got << " is in myset";
+
+  std::cout << std::endl;
+
+  return 0;
+}
+
+
+Another member function, unordered_set::count, can be used to just check whether a particular element exists.
+
+Searches the container for elements with a value of k and returns the number of elements found. Because unordered_set containers do not allow for duplicate values, this means that the function actually returns 1 if an element with that value exists in the container, and zero otherwise.
+
+// unordered_set::count
+#include <iostream>
+#include <string>
+#include <unordered_set>
+
+int main ()
+{
+  std::unordered_set<std::string> myset = { "hat", "umbrella", "suit" };
+
+  for (auto& x: {"hat","sunglasses","suit","t-shirt"}) {
+    if (myset.count(x)>0)
+      std::cout << "myset has " << x << std::endl;
+    else
+      std::cout << "myset has no " << x << std::endl;
+  }
+
+  return 0;
+}
+
+
+
+
